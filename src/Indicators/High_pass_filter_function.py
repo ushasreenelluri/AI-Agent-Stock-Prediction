@@ -2,8 +2,7 @@ import math
 import yfinance as yf
 import pandas as pd
 from datetime import datetime, timedelta
-import matplotlib.pyplot as plt
-import plotly.graph_objects as go
+#import plotly.graph_objects as go
 
 class DataFetcher:
     def __init__(self, start_date: datetime = None, end_date: datetime = None):
@@ -52,7 +51,8 @@ def highpass_filter(price_series, period):
             + c3 * highpass_series[i - 2]
         )
     return highpass_series
-
+"""
+#Usage example:
 fetcher = DataFetcher()  # Initialize DataFetcher with default dates
 data = fetcher.get_stock_data('ES=F')  # Fetch Apple stock data
 
@@ -81,3 +81,5 @@ fig.update_layout(title='Comparison of Closing Prices and Highpass Filtered Pric
                   yaxis_title='Price (USD)',
                   legend_title='Legend')
 fig.show()
+
+"""
