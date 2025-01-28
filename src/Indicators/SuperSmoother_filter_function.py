@@ -31,12 +31,13 @@ def super_smoother(price_series, period):
             + c3 * smooth_series[i - 2]
         )
     return smooth_series
-
+"""
+#Usage example:
 symbol = 'ES=F'
 fetcher = DataFetcher(symbol=symbol)
 price_data = fetcher.get_stock_data()
 smoothed_prices = super_smoother(price_data.squeeze().tolist(), 14)
 smoothed_df = pd.DataFrame(smoothed_prices, index=price_data.index, columns=['Smoothed'])
 print(smoothed_df[:10])
-
+"""
 
