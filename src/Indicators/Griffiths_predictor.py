@@ -10,13 +10,11 @@ from src.Indicators.SuperSmoother_filter_function import super_smoother
 class DataFetcher:
     def __init__(self, symbol, start_date: datetime = None, end_date: datetime = None):
         self.symbol = symbol
-        # Initialize start_date
         if start_date is None:
             self.start_date = datetime.today() - timedelta(days=60)
         else:
             self.start_date = start_date
 
-        # Initialize end_date
         if end_date is None:
             self.end_date = datetime.today()
         else:
@@ -44,36 +42,31 @@ def griffiths_predictor(close_prices, length=18, lower_bound=18, upper_bound=40,
     hp = highpass_filter(close_prices, upper_bound)
     lp = super_smoother(hp, lower_bound)
 
-    xx = np.zeros(length)  # Initialize signal history
-    coef = np.zeros(length)  # Initialize coefficients
+    xx = np.zeros(length)  
+    coef = np.zeros(length)  
     peak = 0.1
     predictions = np.zeros_like(close_prices)
 
-    # Main prediction loop
     for t in range(length, len(lp)):
         if np.abs(lp[t]) > peak:
             peak = np.abs(lp[t])
         signal = lp[t] / peak if peak != 0 else 0
 
-        # Shift signal history
         xx[:-1] = xx[1:]
         xx[-1] = signal[-1]
 
-        # Calculate prediction
         prediction = np.dot(xx, coef)
         predictions[t] = prediction
 
-        # Update error and coefficients
         error = signal - prediction
         coef += mu * error * xx
 
-    # Forward prediction beyond the current data
     future_signals = np.zeros(bars_fwd)
     for i in range(bars_fwd):
         future_signal = np.dot(xx, coef)
         future_signals[i] = future_signal
-        xx[:-1] = xx[1:]  # Shift signal history
-        xx[-1] = future_signal  # Add future signal
+        xx[:-1] = xx[1:]  
+        xx[-1] = future_signal 
 
     return predictions, future_signals
 
