@@ -16,56 +16,61 @@ from src.Indicators.sma import SMAIndicator  # Import the SMAIndicator class
 # ==============================
 def calculate_gann_hi_lo_activator(df: pd.DataFrame, smoothing_period: int = 0) -> pd.DataFrame:
     """
-    Calculates the Gann Hi-Lo Activator indicator with dynamic column handling.
+    Calculates the Gann Hi-Lo Activator indicator.
+
+    For each row:
+      - If current close > previous activator:
+            activator = min(current low, previous activator)
+      - Otherwise:
+            activator = max(current high, previous activator)
+    
+    Optionally applies exponential moving average (EMA) smoothing if smoothing_period > 1.
+    
+    Parameters:
+        df (pd.DataFrame): DataFrame containing 'High', 'Low', and 'Close' columns.
+        smoothing_period (int): Period for EMA smoothing. If <= 1, no smoothing is applied.
+        
+    Returns:
+        pd.DataFrame: Original DataFrame with two new columns:
+                      - 'Gann_Hi_Lo': Raw indicator values.
+                      - 'Gann_Hi_Lo_Smoothed': Smoothed indicator values.
     """
-    # Check for variations in column names
-    possible_low_columns = ['Low', 'low', 'Low AAPL']
-    possible_high_columns = ['High', 'high', 'High AAPL']
-    possible_close_columns = ['Close', 'close', 'Close AAPL']
-
-    # Dynamically select columns
-    low_col = next((col for col in possible_low_columns if col in df.columns), None)
-    high_col = next((col for col in possible_high_columns if col in df.columns), None)
-    close_col = next((col for col in possible_close_columns if col in df.columns), None)
-
-    if not low_col or not high_col or not close_col:
-        raise KeyError(f"Required columns 'Low', 'High', or 'Close' not found in the DataFrame. Columns found: {df.columns.tolist()}")
-
-    # Initialize the activator list
+    # Initialize the activator list with NaN values
     activator = [np.nan] * len(df)
     
-    # Set the first activator value
-    activator[0] = float(df[low_col].iloc[0])
+    # Set the first value of the activator (commonly, the first low value)
+    activator[0] = float(df['Low'].iloc[0])
     
-    # Process each row
+    # Process each row sequentially (simulating real-time processing)
     for i in range(1, len(df)):
-        current_close  = float(df[close_col].iloc[i])
-        current_low    = float(df[low_col].iloc[i])
-        current_high   = float(df[high_col].iloc[i])
+        current_close  = float(df['Close'].iloc[i])
+        current_low    = float(df['Low'].iloc[i])
+        current_high   = float(df['High'].iloc[i])
         prev_activator = float(activator[i - 1])
         
+        # Determine the new activator based on directional movement
         if current_close > prev_activator:
+            # Uptrend: set activator to the lower of the current low or previous activator
             activator[i] = min(current_low, prev_activator)
         else:
+            # Downtrend: set activator to the higher of the current high or previous activator
             activator[i] = max(current_high, prev_activator)
     
-    # Add the raw activator values
-    df['Gann Hi-Lo'] = activator
-
-    # Apply EMA smoothing
+    # Add the raw activator values to the DataFrame
+    df['Gann_Hi_Lo'] = activator
+    
+    # Apply EMA smoothing if requested and ensure the Series has the same index as the DataFrame
     if smoothing_period > 1:
-        ema_series = pd.Series(activator, index=df.index).ewm(span=smoothing_period, adjust=False).mean()
-        ema_series.name = 'Gann Hi-Lo Smoothed'
-        df['Gann Hi-Lo Smoothed'] = ema_series
+        df['Gann_Hi_Lo_Smoothed'] = pd.Series(activator, index=df.index).ewm(span=smoothing_period, adjust=False).mean()
     else:
-        df['Gann Hi-Lo Smoothed'] = df['Gann Hi-Lo']
-
+        df['Gann_Hi_Lo_Smoothed'] = df['Gann_Hi_Lo']
+    
     return df
 
 # ==============================
 # Streamlit UI
 # ==============================
-st.title("Gann Hi Lo Trading System")
+st.title("Prototype Trading System")
 
 # Input field to choose stock symbol
 symbol = st.text_input("Enter Stock Symbol:", value="AAPL")
@@ -74,26 +79,32 @@ symbol = st.text_input("Enter Stock Symbol:", value="AAPL")
 data_fetcher = DataFetcher()
 data = data_fetcher.get_stock_data(symbol)
 
-# Flatten multi-level columns if present
-if isinstance(data.columns, pd.MultiIndex):
-    data.columns = [' '.join(col).strip() for col in data.columns]
-
-# Debugging: Display column names to ensure correct structure
-st.write("DataFrame Columns:", data.columns.tolist())
-
 # Display the original stock data
 st.write(f"Original Stock Data for {symbol}:")
 st.dataframe(data.tail())
 
+# Button and input for calculating SMA using the SMAIndicator class
+if st.button("Calculate SMA"):
+    period = st.number_input("Enter SMA period:", min_value=1, max_value=100, value=14, key="sma_period")
+    sma_indicator = SMAIndicator(period=period)  # Instantiate the SMAIndicator class
+    data_with_sma = sma_indicator.calculate(data)  # Calculate the SMA
+    st.write(f"Stock Data with SMA{period} for {symbol}:")
+    st.dataframe(data_with_sma.tail())
+
+# Button and input for calculating RSI using pandas_ta
+if st.button("Calculate RSI"):
+    period = st.number_input("Enter RSI period:", min_value=1, max_value=100, value=14, key="rsi_period")
+    data[f"RSI{period}"] = ta.rsi(data['Close'], length=period)
+    st.write(f"Stock Data with RSI{period} for {symbol}:")
+    st.dataframe(data.tail())
+
 # Button and input for calculating the Gann Hi-Lo Activator
 gann_smoothing = st.number_input("Enter Gann Hi-Lo Smoothing Period:", min_value=1, max_value=100, value=10, key="gann_smoothing")
 if st.button("Calculate Gann Hi-Lo Activator"):
-    try:
-        data_with_gann = calculate_gann_hi_lo_activator(data.copy(), smoothing_period=gann_smoothing)
-        st.write(f"Stock Data with Gann Hi-Lo Activator for {symbol}:")
-        st.dataframe(data_with_gann[['Close', 'High', 'Low', 'Gann Hi-Lo', 'Gann Hi-Lo Smoothed']].tail())
-    except KeyError as e:
-        st.error(f"Error: {e}")
+    # Use a copy of the data to avoid modifying the original DataFrame
+    data_with_gann = calculate_gann_hi_lo_activator(data.copy(), smoothing_period=gann_smoothing)
+    st.write(f"Stock Data with Gann Hi-Lo Activator for {symbol}:")
+    st.dataframe(data_with_gann.tail())
 
 # Button to fetch the latest stock data for the selected symbol
 if st.button("Fetch Latest Data"):
