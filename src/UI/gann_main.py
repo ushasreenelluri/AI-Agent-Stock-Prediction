@@ -70,7 +70,7 @@ def calculate_gann_hi_lo_activator(df: pd.DataFrame, smoothing_period: int = 0) 
 # ==============================
 # Streamlit UI
 # ==============================
-st.title("Prototype Trading System")
+st.title("Gann Trading System")
 
 # Input field to choose stock symbol
 symbol = st.text_input("Enter Stock Symbol:", value="AAPL")
@@ -82,21 +82,6 @@ data = data_fetcher.get_stock_data(symbol)
 # Display the original stock data
 st.write(f"Original Stock Data for {symbol}:")
 st.dataframe(data.tail())
-
-# Button and input for calculating SMA using the SMAIndicator class
-if st.button("Calculate SMA"):
-    period = st.number_input("Enter SMA period:", min_value=1, max_value=100, value=14, key="sma_period")
-    sma_indicator = SMAIndicator(period=period)  # Instantiate the SMAIndicator class
-    data_with_sma = sma_indicator.calculate(data)  # Calculate the SMA
-    st.write(f"Stock Data with SMA{period} for {symbol}:")
-    st.dataframe(data_with_sma.tail())
-
-# Button and input for calculating RSI using pandas_ta
-if st.button("Calculate RSI"):
-    period = st.number_input("Enter RSI period:", min_value=1, max_value=100, value=14, key="rsi_period")
-    data[f"RSI{period}"] = ta.rsi(data['Close'], length=period)
-    st.write(f"Stock Data with RSI{period} for {symbol}:")
-    st.dataframe(data.tail())
 
 # Button and input for calculating the Gann Hi-Lo Activator
 gann_smoothing = st.number_input("Enter Gann Hi-Lo Smoothing Period:", min_value=1, max_value=100, value=10, key="gann_smoothing")
