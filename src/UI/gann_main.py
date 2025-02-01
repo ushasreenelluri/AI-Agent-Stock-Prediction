@@ -50,18 +50,20 @@ def calculate_gann_hi_lo_activator(df: pd.DataFrame, smoothing_period: int = 0) 
         
         # Determine the new activator based on directional movement
         if current_close > prev_activator:
-            # Uptrend: set activator to the lower of the current low or previous activator
+            # Uptrend: set activator to the lower of current low or previous activator
             activator[i] = min(current_low, prev_activator)
         else:
-            # Downtrend: set activator to the higher of the current high or previous activator
+            # Downtrend: set activator to the higher of current high or previous activator
             activator[i] = max(current_high, prev_activator)
     
-    # Add the raw activator values to the DataFrame
+    # Add the raw activator values to the DataFrame with an explicit column name.
     df['Gann_Hi_Lo'] = activator
     
-    # Apply EMA smoothing if requested and ensure the Series has the same index as the DataFrame
+    # Apply EMA smoothing if requested. Explicitly set the Series name so that the column header shows.
     if smoothing_period > 1:
-        df['Gann_Hi_Lo_Smoothed'] = pd.Series(activator, index=df.index).ewm(span=smoothing_period, adjust=False).mean()
+        ema_series = pd.Series(activator, index=df.index).ewm(span=smoothing_period, adjust=False).mean()
+        ema_series.name = 'Gann_Hi_Lo_Smoothed'  # Set the series name explicitly
+        df['Gann_Hi_Lo_Smoothed'] = ema_series
     else:
         df['Gann_Hi_Lo_Smoothed'] = df['Gann_Hi_Lo']
     
@@ -70,7 +72,7 @@ def calculate_gann_hi_lo_activator(df: pd.DataFrame, smoothing_period: int = 0) 
 # ==============================
 # Streamlit UI
 # ==============================
-st.title("Gann Trading System")
+st.title("Prototype Trading System")
 
 # Input field to choose stock symbol
 symbol = st.text_input("Enter Stock Symbol:", value="AAPL")
