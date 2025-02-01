@@ -32,8 +32,8 @@ def calculate_gann_hi_lo_activator(df: pd.DataFrame, smoothing_period: int = 0) 
         
     Returns:
         pd.DataFrame: Original DataFrame with two new columns:
-                      - 'Gann_Hi_Lo': Raw indicator values.
-                      - 'Gann_Hi_Lo_Smoothed': Smoothed indicator values.
+                      - 'Gann Hi Lo': Raw indicator values.
+                      - 'Gann Hi Lo Smoothed': Smoothed indicator values.
     """
     # Initialize the activator list with NaN values
     activator = [np.nan] * len(df)
@@ -56,16 +56,17 @@ def calculate_gann_hi_lo_activator(df: pd.DataFrame, smoothing_period: int = 0) 
             # Downtrend: set activator to the higher of the current high or previous activator
             activator[i] = max(current_high, prev_activator)
     
-    # Add the raw activator values to the DataFrame
-    df['Gann_Hi_Lo'] = activator
+    # Add the raw activator values with the desired column name to the DataFrame
+    df['Gann Hi Lo'] = activator
     
     # Apply EMA smoothing if requested and ensure the Series has the same index as the DataFrame
     if smoothing_period > 1:
-        df['Gann_Hi_Lo_Smoothed'] = pd.Series(activator, index=df.index).ewm(span=smoothing_period, adjust=False).mean()
+        df['Gann Hi Lo Smoothed'] = pd.Series(activator, index=df.index).ewm(span=smoothing_period, adjust=False).mean()
     else:
-        df['Gann_Hi_Lo_Smoothed'] = df['Gann_Hi_Lo']
+        df['Gann Hi Lo Smoothed'] = df['Gann Hi Lo']
     
     return df
+
 
 # ==============================
 # Streamlit UI
