@@ -1,4 +1,3 @@
-
 import re
 from pydantic import BaseModel, Field
 from textwrap import dedent
@@ -7,6 +6,19 @@ from datetime import datetime
 import os
 from src.Agents.base_agent import BaseAgent
 from src.Agents.Analysis.Tools.search_tools import SearchTools
+
+# Define the Portfolio Data Agent for collaboration
+class PortfolioDataAgent(BaseAgent):
+    def __init__(self, **kwargs):
+        super().__init__(
+            role='Portfolio Data Agent',
+            goal="Integrate and manage portfolio data",
+            backstory='An expert in financial data management',
+            **kwargs)
+
+    def integrate_data(self, data):
+        # Logic to integrate data
+        return f"Data integrated: {data}"
 
 
 class ScenarioInputAgent(BaseAgent):
@@ -19,6 +31,21 @@ class ScenarioInputAgent(BaseAgent):
             **kwargs)
         
         self.previous_report = None
+        self.portfolio_agent = PortfolioDataAgent()
+
+    def parse_user_query(self, query):
+        # Interpret natural language inputs
+        return re.findall(r'\b\w+\b', query)
+
+    def validate_inputs(self, inputs):
+        # Validate inputs for accuracy and relevance
+        return all(isinstance(item, str) and item.isalpha() for item in inputs)
+
+    def route_query(self, query):
+        # Route queries to appropriate agents
+        if 'portfolio' in query.lower():
+            return self.portfolio_agent.integrate_data(query)
+        return "No appropriate agent found."
 
     def get_scenarios_from_news(self):
         if os.name == 'nt':  # For Windows
@@ -34,12 +61,10 @@ class ScenarioInputAgent(BaseAgent):
                                
                 Pay special attention to any inflation, interest rate,
                 and large movements in the stock market.
-                                                         
+                                         
                Make sure to use the most recent data as possible. Do not consider news older than 1 week from {formatted_date}.
 
                "If you do your BEST WORK, I'll give you a $10,000 commission!"
-          
-          
             """),
             agent=self,
             expected_output="A comprehensive report on recent market scenarios"
@@ -75,3 +100,13 @@ class ScenarioInputAgent(BaseAgent):
             action=task_logic  
         )
 
+# Example Usage
+if __name__ == "__main__":
+    agent = ScenarioInputAgent()
+    query = "What is the impact of inflation on my portfolio?"
+    parsed_query = agent.parse_user_query(query)
+    if agent.validate_inputs(parsed_query):
+        response = agent.route_query(query)
+        print(response)
+    else:
+        print("Invalid input detected.")
