@@ -9,8 +9,8 @@ import pandas as pd
 #from src.Data_Retrieval.data_fetcher import DataFetcher
 #from src.Indicators.trix import calculate_trix
 
-from Data_Retrieval.data_fetcher import DataFetcher
-from Indicators.trix import calculate_trix
+from Chadalavada-AI-Agent-Stock-Prediction.src.Data_Retrieval.data_fetcher import DataFetcher
+from Chadalavada-AI-Agent-Stock-Prediction.src.Indicators.trix import calculate_trix
 
 st.title("TRIX Indicator Calculation")
 
