@@ -6,8 +6,11 @@ import streamlit as st
 import pandas as pd
 
 # Import your existing modules
-from src.Data_Retrieval.data_fetcher import DataFetcher
-from src.Indicators.trix import calculate_trix
+#from src.Data_Retrieval.data_fetcher import DataFetcher
+#from src.Indicators.trix import calculate_trix
+
+from Data_Retrieval.data_fetcher import DataFetcher
+from Indicators.trix import calculate_trix
 
 st.title("TRIX Indicator Calculation")
 
