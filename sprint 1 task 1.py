@@ -1,13 +1,20 @@
 import re
 from typing import Dict, Any
+from crewai import Agent, Task
 
-class ScenarioInputAgent:
+class ScenarioInputAgent(Agent):
     """
-    A class to process user queries by extracting relevant tasks and routing them
+    A CrewAI agent to process user queries by extracting relevant tasks and routing them
     to appropriate internal processing modules.
     """
     
     def __init__(self):
+        super().__init__(
+            name="Scenario Input Agent",
+            role="Market Analysis and Routing Agent",
+            goal="Process user queries and provide relevant market analysis",
+            backstory="An expert in market analysis and reporting, ensuring accurate task delegation."
+        )
         self.supported_tasks = {
             "tax analysis": "Tax Calculation Module",
             "stock trading": "Trading Signal Module",
@@ -38,9 +45,13 @@ class ScenarioInputAgent:
         
         return self.extract_tasks(user_query)
     
-    def fetch_data_from_source(self) -> Dict[str, Any]:
-        """Placeholder for future integration with external data sources."""
-        return {"message": "External data retrieval not yet implemented."}
+    def create_task(self, user_query: str) -> Task:
+        """Create a CrewAI Task to process the user query."""
+        return Task(
+            description=f"Analyze and process the following user request: {user_query}",
+            agent=self,
+            expected_output="Detailed analysis and routing of the user request."
+        )
     
     def integrate_portfolio_data(self, portfolio_data: Dict[str, Any]) -> Dict[str, Any]:
         """Simulate integration with a portfolio data system."""
@@ -55,7 +66,8 @@ if __name__ == "__main__":
     user_query = "I need tax analysis and stock trading insights."
     print(agent.process_query(user_query))
     
+    task = agent.create_task(user_query)
+    print(task)
+    
     portfolio_data = {"stocks": ["AAPL", "GOOGL"], "balance": 50000}
     print(agent.integrate_portfolio_data(portfolio_data))
-    
-    print(agent.fetch_data_from_source())
