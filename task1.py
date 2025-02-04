@@ -15,19 +15,35 @@ def chatgpt_query(prompt: str) -> str:
     )
     return response["choices"][0]["message"]["content"].strip()
 
-class ScenarioInputAgent(Agent):
+class PortfolioDataAgent(Agent):
     def __init__(self):
+        super().__init__(
+            name="Portfolio Data Agent",
+            description="Handles portfolio data retrieval and management."
+        )
+
+    def get_portfolio_data(self, query: str) -> Dict[str, Any]:
+        """
+        Retrieves relevant portfolio data based on the user query.
+        This can be extended to fetch actual portfolio data from a database or API.
+        """
+        # Simulate portfolio data retrieval for tax-related queries
+        if "capital gains" in query:
+            return {"status": "success", "capital_gains": 5000}  # Example response
+        return {"status": "error", "message": "No relevant portfolio data found."}
+
+class ScenarioInputAgent(Agent):
+    def __init__(self, portfolio_data_agent: PortfolioDataAgent):
         super().__init__(
             name="Scenario Input Agent",
             description="Parses user queries and routes them appropriately."
         )
+        self.portfolio_data_agent = portfolio_data_agent
     
     def execute(self, query: str) -> Dict[str, Any]:
         """
-        Handles user queries and routes them to the correct agent.
-        - Integrated natural language processing to interpret various investment-related inputs.
-        - Configured the agent to validate input accuracy and relevance.
-        - Enabled the agent to route validated queries to appropriate system agents for smooth interactions.
+        Handles user queries, validates input, and routes to appropriate agents.
+        If tax-related, it integrates portfolio data for analysis.
         """
         if not self.validate_input(query):
             return {"status": "error", "message": "Invalid input. Please provide a meaningful query."}
@@ -36,6 +52,13 @@ class ScenarioInputAgent(Agent):
         if task == "unknown":
             return {"status": "error", "message": "Task not recognized. Please refine your query."}
         
+        # If task is tax analysis, fetch portfolio data
+        if task == "tax_analysis":
+            portfolio_data = self.portfolio_data_agent.get_portfolio_data(query)
+            if portfolio_data["status"] == "error":
+                return portfolio_data  # Return the error message if data retrieval fails
+            return {"status": "success", "task": task, "message": f"Tax analysis initiated. Portfolio Data: {portfolio_data}"}
+        
         return {"status": "success", "task": task, "message": f"Request routed to {task} agent."}
     
     def validate_input(self, query: str) -> bool:
@@ -43,11 +66,7 @@ class ScenarioInputAgent(Agent):
         return bool(query and isinstance(query, str) and len(query.strip()) > 3)
     
     def parse_query(self, query: str) -> str:
-        """
-        Uses ChatGPT to interpret the user query dynamically.
-        - Leverages NLP to classify queries into predefined categories.
-        - Ensures the query aligns with known system tasks.
-        """
+        """Classifies the query into the appropriate task category."""
         query = query.lower()
         prompt = f"Classify the following query into one of these categories: tax_analysis, signal_generation, backtesting, forward_testing, visualization, security_compliance. Query: {query}"
         response = chatgpt_query(prompt)
@@ -55,7 +74,11 @@ class ScenarioInputAgent(Agent):
 
 # Example Usage
 if __name__ == "__main__":
-    agent = ScenarioInputAgent()
+    # Create instances of both agents
+    portfolio_data_agent = PortfolioDataAgent()
+    agent = ScenarioInputAgent(portfolio_data_agent)
+    
+    # Simulate a user query related to tax analysis
     user_query = "Can you analyze my capital gains tax?"
     response = agent.execute(user_query)
     print(response)
