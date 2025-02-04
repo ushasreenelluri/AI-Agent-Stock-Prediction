@@ -4,7 +4,7 @@ from typing import Dict, Any
 import openai
 
 # OpenAI API Key (Ensure it's securely stored in environment variables)
-OPENAI_API_KEY = "your-api-key-here"
+OPENAI_API_KEY = " "
 
 def chatgpt_query(prompt: str) -> str:
     """Fetches a response from OpenAI's ChatGPT API."""
