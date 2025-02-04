@@ -36,19 +36,19 @@ class ScenarioInputAgent(Agent):
     def __init__(self, portfolio_data_agent: PortfolioDataAgent):
         super().__init__(
             name="Scenario Input Agent",
-            description="Parses user queries and routes them appropriately."
+            description="Analyzes user queries and routes them appropriately."
         )
         self.portfolio_data_agent = portfolio_data_agent
     
     def execute(self, query: str) -> Dict[str, Any]:
         """
-        Handles user queries, validates input, and routes to appropriate agents.
+        Analyzes user queries, validates input, and routes to appropriate agents.
         If tax-related, it integrates portfolio data for analysis.
         """
         if not self.validate_input(query):
             return {"status": "error", "message": "Invalid input. Please provide a meaningful query."}
         
-        task = self.parse_query(query)
+        task = self.analyze_query(query)
         if task == "unknown":
             return {"status": "error", "message": "Task not recognized. Please refine your query."}
         
@@ -65,8 +65,8 @@ class ScenarioInputAgent(Agent):
         """Validates user input to ensure accuracy and relevance."""
         return bool(query and isinstance(query, str) and len(query.strip()) > 3)
     
-    def parse_query(self, query: str) -> str:
-        """Classifies the query into the appropriate task category."""
+    def analyze_query(self, query: str) -> str:
+        """Analyzes the query and classifies it into the appropriate task category."""
         query = query.lower()
         prompt = f"Classify the following query into one of these categories: tax_analysis, signal_generation, backtesting, forward_testing, visualization, security_compliance. Query: {query}"
         response = chatgpt_query(prompt)
