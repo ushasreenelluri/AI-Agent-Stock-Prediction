@@ -74,11 +74,21 @@ class ScenarioInputAgent(Agent):
 
 # Example Usage
 if __name__ == "__main__":
+    # Initialize the CrewAI system and agents
+    crew = Crew()
+
     # Create instances of both agents
     portfolio_data_agent = PortfolioDataAgent()
     agent = ScenarioInputAgent(portfolio_data_agent)
     
+    # Add agents to Crew
+    crew.add_agent(portfolio_data_agent)
+    crew.add_agent(agent)
+
     # Simulate a user query related to tax analysis
     user_query = "Can you analyze my capital gains tax?"
     response = agent.execute(user_query)
     print(response)
+
+    # Optionally, you can check if the agents are registered in Crew
+    print(f"Registered agents: {crew.get_agents()}")
